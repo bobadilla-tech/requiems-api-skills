@@ -75,7 +75,7 @@ requiems-api-skills/
 │   └── <category>/
 │       └── <endpoint-name>.md  # One skill file per endpoint
 ├── scripts/
-│   └── build.js              # Transform raw API docs into skill format
+│   └── build.ts              # Transform raw API docs into skill format (Deno)
 ├── package.json
 └── README.md
 ```
@@ -116,7 +116,7 @@ and the original `text`. Results are returned in the same order as the input.
 Runs every Monday at 08:00 UTC.
 
 1. Checks out both `requiems-api` and this repository.
-2. Runs `scripts/build.js` to regenerate skill files.
+2. Runs `scripts/build.ts` via Deno to regenerate skill files.
 3. If any skill file changed, opens (or updates) a pull request with the diff.
 4. A maintainer reviews and merges; publish runs automatically on merge.
 
@@ -141,13 +141,13 @@ The POC covers only the transformation and local packaging step. It does not inc
 **Step 1 — Pick two or three representative endpoints**
 Choose endpoints with different characteristics from `api_docs/` — one with simple parameters and a flat response (e.g., `sudoku`), one with a richer nested response structure (e.g., `exercises`), and one with an external API dependency (e.g., `spellcheck`, which calls the LanguageTool API). This tests that the transformer handles different levels of complexity, not just the happy path.
 
-**Step 2 — Write `scripts/build.js`**
-A minimal Node.js script that:
+**Step 2 — Write `scripts/build.ts`**
+A minimal Deno TypeScript script that:
 - Reads a `.yml` file from `api_docs/`
 - Extracts the relevant fields (name, method, path, description, parameters, errors, examples)
 - Writes a `.md` file in the skill format defined in this document
 
-No GitHub Actions, no automation. Just: `node scripts/build.js --source ./sample-docs --output ./skills`
+No GitHub Actions, no automation. Just: `deno run --allow-read --allow-write scripts/build.ts --source ./sample-docs --output ./skills`
 
 **Step 3 — Set up `package.json`**
 Minimal `package.json` that includes only the `skills/` directory in the published files. Verify locally with `npm pack` — this generates a `.tgz` file that shows exactly what a user would download.
@@ -161,7 +161,7 @@ Open the installed files and confirm a real agent tool (Claude Code) can load an
 
 ### Success criteria
 
-- `build.js` runs without errors on the three selected endpoints
+- `build.ts` runs without errors on the three selected endpoints
 - The generated `.md` files are valid skill format (correct front-matter, readable body)
 - `npm pack` produces a `.tgz` with only the `skills/` folder inside
 - At least one generated skill can be loaded by Claude Code without manual editing
