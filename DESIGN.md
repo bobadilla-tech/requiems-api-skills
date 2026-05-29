@@ -113,7 +113,7 @@ requiems-api-skills/
 │   └── <category>/
 │       └── <endpoint-name>.md  # One skill file per endpoint
 ├── scripts/
-│   └── build.js              # Transform raw API docs into skill format
+│   └── build.ts              # Transform raw API docs into skill format (Deno)
 ├── package.json
 └── README.md
 ```
@@ -156,7 +156,7 @@ input.
 Runs every Monday at 08:00 UTC.
 
 1. Checks out both `requiems-api` and this repository.
-2. Runs `scripts/build.js` to regenerate skill files.
+2. Runs `scripts/build.ts` via Deno to regenerate skill files.
 3. If any skill file changed, opens (or updates) a pull request with the diff.
 4. A maintainer reviews and merges; publish runs automatically on merge.
 
@@ -189,15 +189,14 @@ flat response (e.g., `sudoku`), one with a richer nested response structure
 `spellcheck`, which calls the LanguageTool API). This tests that the transformer
 handles different levels of complexity, not just the happy path.
 
-**Step 2 — Write `scripts/build.js`** A minimal Node.js script that:
-
+**Step 2 — Write `scripts/build.ts`**
+A minimal Deno TypeScript script that:
 - Reads a `.yml` file from `api_docs/`
 - Extracts the relevant fields (name, method, path, description, parameters,
   errors, examples)
 - Writes a `.md` file in the skill format defined in this document
 
-No GitHub Actions, no automation. Just:
-`node scripts/build.js --source ./sample-docs --output ./skills`
+No GitHub Actions, no automation. Just: `deno run --allow-read --allow-write scripts/build.ts --source ./sample-docs --output ./skills`
 
 **Step 3 — Set up `package.json`** Minimal `package.json` that includes only the
 `skills/` directory in the published files. Verify locally with `npm pack` —
@@ -215,9 +214,8 @@ and use at least one skill correctly.
 
 ### Success criteria
 
-- `build.js` runs without errors on the three selected endpoints
-- The generated `.md` files are valid skill format (correct front-matter,
-  readable body)
+- `build.ts` runs without errors on the three selected endpoints
+- The generated `.md` files are valid skill format (correct front-matter, readable body)
 - `npm pack` produces a `.tgz` with only the `skills/` folder inside
 - At least one generated skill can be loaded by Claude Code without manual
   editing
@@ -237,7 +235,7 @@ trigger).
 
 **Format coupling**: The build script assumes the current structure of
 `api_docs/` YAML files. Changes to that schema in `requiems-api` will break the
-sync until `scripts/build.js` is updated.
+sync until `scripts/build.ts` is updated.
 
 **npm registry dependency**: Publishing depends on an org-level npm token. Token
 rotation or org changes require updating the `NPM_TOKEN` secret in this
