@@ -72,7 +72,11 @@ function buildSkillMarkdown(api: ApiDoc, endpoint: Endpoint): string {
 
   // Front-matter
   lines.push("---");
-  lines.push(`name: ${api.api_id}-${endpoint.method.toLowerCase()}-${endpoint.path.split("/").pop()}`);
+  lines.push(
+    `name: ${api.api_id}-${endpoint.method.toLowerCase()}-${
+      endpoint.path.split("/").pop()
+    }`,
+  );
   lines.push(`api: ${api.api_name}`);
   lines.push(`method: ${endpoint.method}`);
   lines.push(`path: ${endpoint.path}`);
@@ -102,7 +106,9 @@ function buildSkillMarkdown(api: ApiDoc, endpoint: Endpoint): string {
     lines.push("| ---- | ---- | -------- | -------- | ----------- |");
     for (const p of endpoint.parameters) {
       const req = p.required ? "yes" : "no";
-      lines.push(`| \`${p.name}\` | ${p.type} | ${req} | ${p.location} | ${p.description} |`);
+      lines.push(
+        `| \`${p.name}\` | ${p.type} | ${req} | ${p.location} | ${p.description} |`,
+      );
     }
     lines.push("");
   }
@@ -204,7 +210,9 @@ async function main() {
     }
 
     for (const endpoint of api.endpoints) {
-      const slug = `${api.api_id}-${endpoint.method.toLowerCase()}-${endpoint.path.split("/").pop()}`;
+      const slug = `${api.api_id}-${endpoint.method.toLowerCase()}-${
+        endpoint.path.split("/").pop()
+      }`;
       const outFile = join(outputPath, `${slug}.md`);
       const content = buildSkillMarkdown(api, endpoint);
       await Deno.writeTextFile(outFile, content);
@@ -213,7 +221,9 @@ async function main() {
     }
   }
 
-  console.log(`\nDone. ${processed} skills generated, ${skipped} files skipped.`);
+  console.log(
+    `\nDone. ${processed} skills generated, ${skipped} files skipped.`,
+  );
 }
 
 main();

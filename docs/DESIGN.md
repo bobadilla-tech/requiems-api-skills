@@ -189,14 +189,15 @@ flat response (e.g., `sudoku`), one with a richer nested response structure
 `spellcheck`, which calls the LanguageTool API). This tests that the transformer
 handles different levels of complexity, not just the happy path.
 
-**Step 2 — Write `scripts/build.ts`**
-A minimal Deno TypeScript script that:
+**Step 2 — Write `scripts/build.ts`** A minimal Deno TypeScript script that:
+
 - Reads a `.yml` file from `api_docs/`
 - Extracts the relevant fields (name, method, path, description, parameters,
   errors, examples)
 - Writes a `.md` file in the skill format defined in this document
 
-No GitHub Actions, no automation. Just: `deno run --allow-read --allow-write scripts/build.ts --source ./sample-docs --output ./skills`
+No GitHub Actions, no automation. Just:
+`deno run --allow-read --allow-write scripts/build.ts --source ./sample-docs --output ./skills`
 
 **Step 3 — Set up `package.json`** Minimal `package.json` that includes only the
 `skills/` directory in the published files. Verify locally with `npm pack` —
@@ -215,7 +216,8 @@ and use at least one skill correctly.
 ### Success criteria
 
 - `build.ts` runs without errors on the three selected endpoints
-- The generated `.md` files are valid skill format (correct front-matter, readable body)
+- The generated `.md` files are valid skill format (correct front-matter,
+  readable body)
 - `npm pack` produces a `.tgz` with only the `skills/` folder inside
 - At least one generated skill can be loaded by Claude Code without manual
   editing

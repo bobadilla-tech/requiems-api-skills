@@ -1,10 +1,13 @@
 {
-  "name": "@requiem/api-skills",
-  "version": "0.1.0",
+  "name": "@requiems/api-skills",
+  "version": "0.1.1",
   "description": "Installable skill packages for Requiems API — enables AI agents to interact with its endpoints natively.",
   "files": [
     "skills/"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "requiems",
     "api",
@@ -17,5 +20,5 @@
     "type": "git",
     "url": "https://github.com/bobadilla-tech/requiems-api-skills.git"
   },
-  "homepage": "https://github.com/bobadilla-tech/requiems-api-skills#readme"
+  "homepage": "https://requiems.xyz/en/skills"
 }
