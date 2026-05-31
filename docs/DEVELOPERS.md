@@ -1,12 +1,7 @@
 # Developer Note
 
-If you need to regenerate the skills, see [DESIGN.md](DESIGN.md) for the full
-pipeline notes.
-
-Build command:
+Regeneration notes live in [DESIGN.md](DESIGN.md).
 
 ```bash
-deno run --allow-read --allow-write scripts/build.ts \
-  --source ../requiems-api/apps/dashboard/config/api_docs \
-  --output ./skills
+deno run --allow-read --allow-write scripts/build.ts --source ../requiems-api/apps/dashboard/config/api_docs --output ./skills
 ```
