@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@std/yaml": "jsr:@std/yaml@^1.1.1",
+    "@std/path": "jsr:@std/path@^1.1.5",
+    "@std/fs": "jsr:@std/fs@^1.0.24",
+    "@std/cli": "jsr:@std/cli@^1.0.30"
+  }
+}

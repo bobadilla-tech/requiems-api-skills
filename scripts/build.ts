@@ -13,9 +13,10 @@
  *     --output ./skills
  */
 
-import { parse } from "jsr:@std/yaml";
-import { join, basename } from "jsr:@std/path";
-import { ensureDir } from "jsr:@std/fs";
+import { parse } from "@std/yaml";
+import { join } from "@std/path";
+import { ensureDir } from "@std/fs";
+import { parseArgs } from "@std/cli/parse-args";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,7 +39,7 @@ interface ResponseField {
 
 interface ApiError {
   status: number;
-  code: string;
+  code?: string;
   description: string;
 }
 
@@ -143,7 +144,8 @@ function buildSkillMarkdown(api: ApiDoc, endpoint: Endpoint): string {
     lines.push("## Errors");
     lines.push("");
     for (const e of endpoint.errors) {
-      lines.push(`- \`${e.status}\` **${e.code}** — ${e.description}`);
+      const codeLabel = e.code ? ` **${e.code}**` : "";
+      lines.push(`- \`${e.status}\`${codeLabel} — ${e.description}`);
     }
     lines.push("");
   }
@@ -157,20 +159,17 @@ function buildSkillMarkdown(api: ApiDoc, endpoint: Endpoint): string {
 
 async function main() {
   // Parse CLI arguments
-  const args = Object.fromEntries(
-    Deno.args
-      .join(" ")
-      .match(/--\w+\s+\S+/g)
-      ?.map((a) => a.split(/\s+/)) ?? [],
-  );
+  const args = parseArgs(Deno.args, {
+    string: ["source", "output"],
+  });
 
-  const sourcePath = args["--source"];
-  const outputPath = args["--output"] ?? "./skills";
+  const sourcePath = args["source"];
+  const outputPath = args["output"] ?? "./skills";
 
   if (!sourcePath) {
     console.error("Error: --source is required.");
     console.error(
-      "Usage: deno run --allow-read --allow-write scripts/build.ts --source <path> --output <path>",
+      "Usage: deno run --allow-read --allow-write scripts/build.ts --source <path> [--output <path>]",
     );
     Deno.exit(1);
   }
