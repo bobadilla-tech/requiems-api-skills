@@ -1,0 +1,44 @@
+name: Weekly Skill Regeneration
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout requiems-api-skills
+        uses: actions/checkout@v4
+
+      - name: 📥 Checkout requiems-api (source of YAML docs)
+        uses: actions/checkout@v4
+        with:
+          repository: bobadilla-tech/requiems-api
+          path: requiems-api
+
+      - name: ⚙️ Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: 🛠️ Regenerate skills
+        run: |
+          deno run --allow-read --allow-write scripts/build.ts \
+            --source requiems-api/apps/dashboard/config/api_docs \
+            --output ./skills
+
+      - name: 🚀 Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: regenerate skills from latest api_docs"
+          title: "Automated: Weekly Skill Regeneration"
+          body: |
+            Skills regenerated automatically from the latest `requiems-api` documentation.
+
+            Triggered by: ${{ github.event_name }}
+          branch: "chore/automated-skill-regeneration"
+          base: "main"
+          delete-branch: true
