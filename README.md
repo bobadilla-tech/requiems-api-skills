@@ -30,14 +30,12 @@ Then browse and install:
 
 1. Select **Browse and install plugins**
 2. Select **requiems-api-skills**
-3. Pick the skill set you want (e.g. `identity-skills`, `payments-skills`)
-4. Select **Install now**
+3. Select **Install now**
 
 Or install directly:
 
 ```
-/plugin install identity-skills@requiems-api-skills
-/plugin install payments-skills@requiems-api-skills
+/plugin install requiems-api-skills@requiems-api-skills
 ```
 
 Once installed, mention the skill naturally: _"Use the identity skill to protect this signup endpoint."_

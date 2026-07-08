@@ -213,7 +213,9 @@ async function main() {
       const slug = `${api.api_id}-${endpoint.method.toLowerCase()}-${
         endpoint.path.split("/").pop()
       }`;
-      const outFile = join(outputPath, `${slug}.md`);
+      const skillDir = join(outputPath, slug);
+      await ensureDir(skillDir);
+      const outFile = join(skillDir, "SKILL.md");
       const content = buildSkillMarkdown(api, endpoint);
       await Deno.writeTextFile(outFile, content);
       console.log(`✓ ${slug}.md`);
