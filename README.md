@@ -14,7 +14,7 @@
 
 # Requiems API Skills
 
-Installable AI skills that give your coding agent direct knowledge of [Requiems API](https://requiems.xyz) — authentication, fraud detection, payments intelligence, and global data, all through one unified API.
+Installable AI skills that give your coding agent direct knowledge of [Requiems API](https://requiems.xyz), authentication, fraud detection, payments intelligence, and global data, all through one unified API.
 
 Drop a skill into your agent and start calling Requiems API endpoints without copying docs or writing boilerplate.
 
