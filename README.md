@@ -80,6 +80,7 @@ Each skill gives your agent:
 
 ## Links
 
+- [This repository](https://github.com/bobadilla-tech/requiems-api-skills)
 - [Requiems API docs](https://requiems.xyz/en/apis)
 - [Official client libraries](https://github.com/bobadilla-tech/requiems-api-clients)
 - [requiems.xyz](https://requiems.xyz)
