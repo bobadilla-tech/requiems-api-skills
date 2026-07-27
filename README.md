@@ -42,23 +42,27 @@ Once installed, mention the skill naturally: _"Use the identity skill to protect
 
 ## Install in OpenCode
 
-Copy the skill file into your OpenCode skills directory:
+OpenCode discovers skills from `.opencode/skills/<name>/SKILL.md` (project) or `~/.config/opencode/skills/<name>/SKILL.md` (global). Copy the folder in:
 
 ```bash
 npm install @requiems/api-skills
-mkdir -p ~/.opencode/skills/requiems-identity
-cp node_modules/@requiems/api-skills/skills/identity.md ~/.opencode/skills/requiems-identity/SKILL.md
+mkdir -p ~/.config/opencode/skills/requiems-identity
+cp node_modules/@requiems/api-skills/skills/identity-risk-post-protect/SKILL.md ~/.config/opencode/skills/requiems-identity/SKILL.md
 ```
+
+Already have the Claude Code plugin installed? OpenCode also reads `.claude/skills/` and `~/.claude/skills/` directly, so it picks up the same skills with no extra step.
 
 ## Install in GitHub Copilot
 
-Place the skill file in your repo's `.github/copilot-instructions` folder or include it as a custom instruction set in your Copilot workspace settings.
+Copilot's agent skills use the same `SKILL.md` convention, one folder per skill under `.github/skills/<name>/SKILL.md` (repo) or `~/.copilot/skills/<name>/SKILL.md` (personal, cross-repo). This is separate from the older single-file `.github/copilot-instructions.md`.
 
 ```bash
 npm install @requiems/api-skills
-mkdir -p .github/copilot-instructions
-cp node_modules/@requiems/api-skills/skills/identity.md .github/copilot-instructions/requiems-identity.md
+mkdir -p .github/skills/requiems-identity
+cp node_modules/@requiems/api-skills/skills/identity-risk-post-protect/SKILL.md .github/skills/requiems-identity/SKILL.md
 ```
+
+Already have the Claude Code plugin installed? Copilot also reads `.claude/skills/` directly, so it picks up the same skills with no extra step.
 
 ## Install Manually (any agent)
 
@@ -77,14 +81,3 @@ Each skill gives your agent:
 - Copy-paste request examples
 - Error codes and handling patterns
 - Engine composition guides (e.g. `/v1/signup/protect`)
-
-## Links
-
-- [This repository](https://github.com/bobadilla-tech/requiems-api-skills)
-- [Requiems API docs](https://requiems.xyz/en/apis)
-- [Official client libraries](https://github.com/bobadilla-tech/requiems-api-clients)
-- [requiems.xyz](https://requiems.xyz)
-
----
-
-> Contributing or building skills? See [docs/](docs/).
