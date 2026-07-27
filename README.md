@@ -14,9 +14,12 @@
 
 # Requiems API Skills
 
-Installable AI skills that give your coding agent direct knowledge of [Requiems API](https://requiems.xyz), authentication, fraud detection, payments intelligence, and global data, all through one unified API.
+Installable AI skills that give your coding agent direct knowledge of
+[Requiems API](https://requiems.xyz), authentication, fraud detection, payments
+intelligence, and global data, all through one unified API.
 
-Drop a skill into your agent and start calling Requiems API endpoints without copying docs or writing boilerplate.
+Drop a skill into your agent and start calling Requiems API endpoints without
+copying docs or writing boilerplate.
 
 ## Install in Claude Code
 
@@ -38,11 +41,13 @@ Or install directly:
 /plugin install requiems-api-skills@requiems-api-skills
 ```
 
-Once installed, mention the skill naturally: _"Use the identity skill to protect this signup endpoint."_
+Once installed, mention the skill naturally: _"Use the identity skill to protect
+this signup endpoint."_
 
 ## Install in OpenCode
 
-OpenCode discovers skills from `.opencode/skills/<name>/SKILL.md` (project) or `~/.config/opencode/skills/<name>/SKILL.md` (global). Copy the folder in:
+OpenCode discovers skills from `.opencode/skills/<name>/SKILL.md` (project) or
+`~/.config/opencode/skills/<name>/SKILL.md` (global). Copy the folder in:
 
 ```bash
 npm install @requiems/api-skills
@@ -50,11 +55,16 @@ mkdir -p ~/.config/opencode/skills/requiems-identity
 cp node_modules/@requiems/api-skills/skills/identity-risk-post-protect/SKILL.md ~/.config/opencode/skills/requiems-identity/SKILL.md
 ```
 
-Already have the Claude Code plugin installed? OpenCode also reads `.claude/skills/` and `~/.claude/skills/` directly, so it picks up the same skills with no extra step.
+Already have the Claude Code plugin installed? OpenCode also reads
+`.claude/skills/` and `~/.claude/skills/` directly, so it picks up the same
+skills with no extra step.
 
 ## Install in GitHub Copilot
 
-Copilot's agent skills use the same `SKILL.md` convention, one folder per skill under `.github/skills/<name>/SKILL.md` (repo) or `~/.copilot/skills/<name>/SKILL.md` (personal, cross-repo). This is separate from the older single-file `.github/copilot-instructions.md`.
+Copilot's agent skills use the same `SKILL.md` convention, one folder per skill
+under `.github/skills/<name>/SKILL.md` (repo) or
+`~/.copilot/skills/<name>/SKILL.md` (personal, cross-repo). This is separate
+from the older single-file `.github/copilot-instructions.md`.
 
 ```bash
 npm install @requiems/api-skills
@@ -62,11 +72,13 @@ mkdir -p .github/skills/requiems-identity
 cp node_modules/@requiems/api-skills/skills/identity-risk-post-protect/SKILL.md .github/skills/requiems-identity/SKILL.md
 ```
 
-Already have the Claude Code plugin installed? Copilot also reads `.claude/skills/` directly, so it picks up the same skills with no extra step.
+Already have the Claude Code plugin installed? Copilot also reads
+`.claude/skills/` directly, so it picks up the same skills with no extra step.
 
 ## Install Manually (any agent)
 
-Skills are plain Markdown files. Works anywhere that accepts custom instructions or a `SKILL.md` convention:
+Skills are plain Markdown files. Works anywhere that accepts custom instructions
+or a `SKILL.md` convention:
 
 ```bash
 npm install @requiems/api-skills

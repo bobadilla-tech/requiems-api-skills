@@ -5,7 +5,7 @@
 
 import { load } from "js-yaml";
 import { join } from "node:path";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import type { ApiDoc, Endpoint } from "./types.ts";
 
@@ -126,7 +126,7 @@ async function main() {
     console.error(
       "Usage: node scripts/build/index.ts --source <path> [--output <path>]",
     );
-    
+
     process.exit(1);
   }
 
