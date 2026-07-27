@@ -126,6 +126,7 @@ async function main() {
     console.error(
       "Usage: node scripts/build/index.ts --source <path> [--output <path>]",
     );
+    
     process.exit(1);
   }
 
