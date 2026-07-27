@@ -1,67 +1,13 @@
 /**
- * build.ts
- *
  * Reads API documentation YAML files from requiems-api and transforms them
  * into Markdown skill files consumable by AI agents.
- *
- * Usage:
- *   node scripts/build.ts --source <path-to-api_docs> --output <path-to-skills>
- *
- * Example:
- *   node scripts/build.ts \
- *     --source ../requiems-api/apps/dashboard/config/api_docs \
- *     --output ./skills
  */
 
 import { load } from "js-yaml";
 import { join } from "node:path";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface Parameter {
-  name: string;
-  type: string;
-  required: boolean;
-  location: string;
-  description: string;
-  example?: string;
-}
-
-interface ResponseField {
-  name: string;
-  type: string;
-  description: string;
-}
-
-interface ApiError {
-  status: number;
-  code?: string;
-  description: string;
-}
-
-interface Endpoint {
-  name: string;
-  method: string;
-  path: string;
-  description: string;
-  parameters?: Parameter[];
-  request_example?: string;
-  response_example?: string;
-  response_fields?: ResponseField[];
-  errors?: ApiError[];
-}
-
-interface ApiDoc {
-  api_id: string;
-  api_name: string;
-  description: string;
-  base_url: string;
-  endpoints: Endpoint[];
-}
+import type { ApiDoc, Endpoint } from "./types.ts";
 
 // ---------------------------------------------------------------------------
 // Markdown builder
@@ -178,7 +124,7 @@ async function main() {
   if (!sourcePath) {
     console.error("Error: --source is required.");
     console.error(
-      "Usage: node scripts/build.ts --source <path> [--output <path>]",
+      "Usage: node scripts/build/index.ts --source <path> [--output <path>]",
     );
     process.exit(1);
   }
