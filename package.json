@@ -10,7 +10,7 @@
     "skills/"
   ],
   "scripts": {
-    "regenerate": "node scripts/build.ts"
+    "regenerate": "node scripts/build/index.ts"
   },
   "devDependencies": {
     "js-yaml": "^4.1.0"

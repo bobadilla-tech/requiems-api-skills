@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
+
 # Builds the body for the automated skill-regeneration PR: notes what
 # triggered the run, pings the review team, and links the requiems.xyz
 # doc page for each API that changed so reviewers can spot-check it.
+
 set -euo pipefail
 
 OUTPUT_FILE="${1:-pr-body.md}"

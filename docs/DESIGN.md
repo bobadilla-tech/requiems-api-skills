@@ -153,7 +153,7 @@ input.
 Runs every Monday at 08:00 UTC.
 
 1. Checks out both `requiems-api` and this repository.
-2. Runs `scripts/build.ts` via Node.js to regenerate skill files.
+2. Runs `scripts/build/index.ts` via Node.js to regenerate skill files.
 3. If any skill file changed, opens (or updates) a pull request with the diff.
 4. A maintainer reviews and merges; publish runs automatically on merge.
 
@@ -186,7 +186,7 @@ flat response (e.g., `sudoku`), one with a richer nested response structure
 `spellcheck`, which calls the LanguageTool API). This tests that the transformer
 handles different levels of complexity, not just the happy path.
 
-**Step 2 — Write `scripts/build.ts`** A minimal Node.js TypeScript script (run
+**Step 2 — Write `scripts/build/index.ts`** A minimal Node.js TypeScript script (run
 directly via `node`, using Node's native TypeScript type-stripping — no build
 step) that:
 
@@ -196,7 +196,7 @@ step) that:
 - Writes a `.md` file in the skill format defined in this document
 
 No GitHub Actions, no automation. Just:
-`node scripts/build.ts --source ./sample-docs --output ./skills`
+`node scripts/build/index.ts --source ./sample-docs --output ./skills`
 
 **Step 3 — Set up `package.json`** Minimal `package.json` that includes only the
 `skills/` directory in the published files. Verify locally with `npm pack` —
@@ -236,7 +236,7 @@ trigger).
 
 **Format coupling**: The build script assumes the current structure of
 `api_docs/` YAML files. Changes to that schema in `requiems-api` will break the
-sync until `scripts/build.ts` is updated.
+sync until `scripts/build/index.ts` is updated.
 
 **npm registry dependency**: Publishing depends on an org-level npm token. Token
 rotation or org changes require updating the `NPM_TOKEN` secret in this
