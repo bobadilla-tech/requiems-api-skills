@@ -18,19 +18,35 @@ jobs:
           repository: bobadilla-tech/requiems-api
           path: requiems-api
 
-      - name: ⚙️ Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-          deno-version: v2.x
+          node-version-file: ".nvmrc"
 
-      - name: 🛠️ Regenerate skills
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate skills
         run: |
-          deno run --allow-read --allow-write scripts/build.ts \
+          node scripts/build.ts \
             --source requiems-api/apps/dashboard/config/api_docs \
             --output ./skills
 
-      - name: 🚀 Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+      - name: Detect changes in skills/
+        id: diff
+        run: |
+          if [ -n "$(git status --porcelain -- skills/)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump patch version
+        if: steps.diff.outputs.changed == 'true'
+        run: npm version patch --no-git-tag-version
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: regenerate skills from latest api_docs"

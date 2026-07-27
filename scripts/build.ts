@@ -5,18 +5,18 @@
  * into Markdown skill files consumable by AI agents.
  *
  * Usage:
- *   deno run --allow-read --allow-write scripts/build.ts --source <path-to-api_docs> --output <path-to-skills>
+ *   node scripts/build.ts --source <path-to-api_docs> --output <path-to-skills>
  *
  * Example:
- *   deno run --allow-read --allow-write scripts/build.ts \
+ *   node scripts/build.ts \
  *     --source ../requiems-api/apps/dashboard/config/api_docs \
  *     --output ./skills
  */
 
-import { parse } from "@std/yaml";
-import { join } from "@std/path";
-import { ensureDir } from "@std/fs";
-import { parseArgs } from "@std/cli/parse-args";
+import { load } from "js-yaml";
+import { join } from "node:path";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { parseArgs } from "node:util";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -165,38 +165,43 @@ function buildSkillMarkdown(api: ApiDoc, endpoint: Endpoint): string {
 
 async function main() {
   // Parse CLI arguments
-  const args = parseArgs(Deno.args, {
-    string: ["source", "output"],
+  const { values: args } = parseArgs({
+    options: {
+      source: { type: "string" },
+      output: { type: "string", default: "./skills" },
+    },
   });
 
-  const sourcePath = args["source"];
-  const outputPath = args["output"] ?? "./skills";
+  const sourcePath = args.source;
+  const outputPath = args.output as string;
 
   if (!sourcePath) {
     console.error("Error: --source is required.");
     console.error(
-      "Usage: deno run --allow-read --allow-write scripts/build.ts --source <path> [--output <path>]",
+      "Usage: node scripts/build.ts --source <path> [--output <path>]",
     );
-    Deno.exit(1);
+    process.exit(1);
   }
 
-  await ensureDir(outputPath);
+  await mkdir(outputPath, { recursive: true });
 
   let processed = 0;
   let skipped = 0;
 
-  for await (const entry of Deno.readDir(sourcePath)) {
-    if (!entry.isFile || !entry.name.endsWith(".yml")) {
+  const entries = await readdir(sourcePath, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".yml")) {
       skipped++;
       continue;
     }
 
     const filePath = join(sourcePath, entry.name);
-    const raw = await Deno.readTextFile(filePath);
+    const raw = await readFile(filePath, "utf-8");
 
     let api: ApiDoc;
     try {
-      api = parse(raw) as ApiDoc;
+      api = load(raw) as ApiDoc;
     } catch (err) {
       console.warn(`Skipping ${entry.name}: YAML parse error — ${err}`);
       skipped++;
@@ -214,10 +219,10 @@ async function main() {
         endpoint.path.split("/").pop()
       }`;
       const skillDir = join(outputPath, slug);
-      await ensureDir(skillDir);
+      await mkdir(skillDir, { recursive: true });
       const outFile = join(skillDir, "SKILL.md");
       const content = buildSkillMarkdown(api, endpoint);
-      await Deno.writeTextFile(outFile, content);
+      await writeFile(outFile, content, "utf-8");
       console.log(`✓ ${slug}.md`);
       processed++;
     }
@@ -228,4 +233,7 @@ async function main() {
   );
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
