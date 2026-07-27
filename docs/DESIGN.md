@@ -27,30 +27,32 @@ npm install @requiems/api-skills
 
 ## Problem
 
-Requiems API maintains structured documentation in
-`apps/dashboard/config/api_docs/`. Without this pipeline, a user who wants
-their AI agent to understand the API has to:
+Getting Requiems API's docs into an agent's context isn't the hard part —
+every API doc page on requiems.xyz already has a "copy as markdown" button
+that dumps a fully-formed doc a user can paste straight into their agent.
+The actual problem is staleness: that copy is a one-time paste. The moment
+the underlying `api_docs/*.yml` changes, every already-pasted copy silently
+drifts out of date, with nothing to notice or fix it. Multiply that by every
+user who's pasted a given API's docs into their own agent config, and it's
+a slow, invisible drift with no way to correct it in bulk.
 
-1. Locate the relevant `.yml` file in the `requiems-api` repository.
-2. Copy its contents manually.
-3. Paste it into their editor or agent context.
-4. Repeat every time the API changes.
-
-This is error-prone and produces stale, inconsistent agent contexts across
-users.
+This pipeline turns that manual, one-time paste into a versioned npm
+dependency: install once, and pick up current docs through a normal
+`npm update` instead of remembering to re-copy from the site.
 
 ## Why We Believe This Is Worth Solving
 
 AI-assisted development is a standard part of developer workflows. As
 Requiems API grows in endpoint count and user base, the gap between "API
-exists" and "agent can use it effectively" widens.
+exists" and "agent still has last month's copy-pasted docs" widens.
 
 Specifically:
 
-- Every new endpoint added to `requiems-api` requires a manual update on the
-  user's side to keep their agent context current. This does not scale.
-- Inconsistent agent context leads to incorrect API calls, which generates
-  avoidable support load.
+- Every change to `requiems-api` requires every user who's already
+  copy-pasted those docs to notice and manually re-paste them. Nothing
+  prompts them to; most won't. This does not scale.
+- Stale or inconsistent agent context leads to incorrect API calls, which
+  generates avoidable support load.
 - Competing API platforms (e.g., Stripe, Twilio) already ship AI-ready
   context packages. Not having one puts Requiems API at a disadvantage in
   developer experience.
