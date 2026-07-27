@@ -45,16 +45,36 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: npm version patch --no-git-tag-version
 
+      - name: Build PR body
+        run: |
+          {
+            echo "Skills regenerated automatically from the latest \`requiems-api\` documentation."
+            echo ""
+            echo "Triggered by: ${{ github.event_name }}"
+            echo ""
+            apis="$(git status --porcelain -- skills/ | awk '{print $2}' | cut -d/ -f2 | sed -E 's/-(get|post|put|patch|delete)-.*$//' | sort -u)"
+            if [ -n "$apis" ]; then
+              echo "<details>"
+              echo "<summary>Changed API doc pages to spot-check</summary>"
+              echo ""
+              echo "Verify each endpoint below is still current — links are built from the API's \`api_id\`, which doesn't always match the source YAML filename 1:1."
+              echo ""
+              echo "$apis" | while read -r api; do
+                echo "- [$api](https://requiems.xyz/en/apis/$api)"
+              done
+              echo ""
+              echo "</details>"
+            fi
+          } > pr-body.md
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: regenerate skills from latest api_docs"
           title: "Automated: Weekly Skill Regeneration"
-          body: |
-            Skills regenerated automatically from the latest `requiems-api` documentation.
-
-            Triggered by: ${{ github.event_name }}
+          body-path: pr-body.md
+          team-reviewers: requiems-api
           branch: "chore/automated-skill-regeneration"
           base: "main"
           delete-branch: true
