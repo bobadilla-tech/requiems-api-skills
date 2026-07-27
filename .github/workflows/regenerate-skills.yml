@@ -2,18 +2,18 @@ name: Weekly Skill Regeneration
 
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
   regenerate:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout requiems-api-skills
-        uses: actions/checkout@v4
+      - name: Checkout requiems-api-skills
+        uses: actions/checkout@v7
 
-      - name: 📥 Checkout requiems-api (source of YAML docs)
-        uses: actions/checkout@v4
+      - name: Checkout requiems-api (source of YAML docs)
+        uses: actions/checkout@v7
         with:
           repository: bobadilla-tech/requiems-api
           path: requiems-api

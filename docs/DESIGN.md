@@ -1,13 +1,7 @@
-# requiems-api-skills — Design Plan
-
-> **Status: Spike / Investigation** This is a design document, not a finished
-> project. The code described here does not exist yet. This document is under
-> review by the maintainer team before implementation begins.
-
----
+# Requiems API Skills Spec
 
 Installable skill packages for
-[Requiems API](https://github.com/bobadilla-tech/requiems-api) — enabling AI
+[Requiems API](https://github.com/bobadilla-tech/requiems-api), enabling AI
 agents to interact with Requiems API endpoints without manual copy-pasting of
 documentation.
 
@@ -50,11 +44,14 @@ Specifically:
 
 - Every new endpoint added to `requiems-api` requires a manual update on the
   user's side to keep their agent context current. This does not scale.
+
 - Inconsistent agent context leads to incorrect API calls, which generates
   avoidable support load.
+
 - Competing API platforms (e.g., Stripe, Twilio) already ship AI-ready context
   packages. Not having one puts Requiems API at a disadvantage in developer
   experience.
+
 - The documentation infrastructure already exists in `api_docs/`. The marginal
   cost of packaging it properly is low compared to the adoption benefit.
 
