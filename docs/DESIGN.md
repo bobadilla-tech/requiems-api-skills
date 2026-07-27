@@ -5,12 +5,18 @@ Installable skill packages for
 agents to interact with Requiems API endpoints without manual copy-pasting of
 documentation.
 
+This document is the living spec: it describes what the pipeline actually
+does today, not what was originally proposed. See the
+[Appendix](#appendix-original-poc-plan) for the historical POC plan this
+was built from.
+
 ## Overview
 
-Requiems API exposes its endpoint documentation as structured YAML files. This
-repository packages that documentation as installable skill bundles so that AI
-agents (Claude, Cursor, Copilot, etc.) can discover, understand, and call
-Requiems API endpoints natively.
+Requiems API exposes its endpoint documentation as structured YAML files
+(`apps/dashboard/config/api_docs/*.yml`). This repository packages that
+documentation as installable skill bundles so that AI agents (Claude, Cursor,
+Copilot, etc.) can discover, understand, and call Requiems API endpoints
+natively.
 
 Instead of copying documentation by hand, users install this package once and
 their agent immediately gains full context on every available endpoint.
@@ -22,10 +28,10 @@ npm install @requiems/api-skills
 ## Problem
 
 Requiems API maintains structured documentation in
-`apps/dashboard/config/api_docs/`. Today, users who want their AI agent to
-understand the API must:
+`apps/dashboard/config/api_docs/`. Without this pipeline, a user who wants
+their AI agent to understand the API has to:
 
-1. Locate the relevant `.yml` file in the repository.
+1. Locate the relevant `.yml` file in the `requiems-api` repository.
 2. Copy its contents manually.
 3. Paste it into their editor or agent context.
 4. Repeat every time the API changes.
@@ -35,25 +41,22 @@ users.
 
 ## Why We Believe This Is Worth Solving
 
-AI-assisted development is becoming a standard part of developer workflows. As
-Requiems API grows in the number of endpoints and user base, the gap between
-"API exists" and "agent can use it effectively" will widen. Today this friction
-is manageable; at scale it becomes a real adoption barrier.
+AI-assisted development is a standard part of developer workflows. As
+Requiems API grows in endpoint count and user base, the gap between "API
+exists" and "agent can use it effectively" widens.
 
 Specifically:
 
 - Every new endpoint added to `requiems-api` requires a manual update on the
   user's side to keep their agent context current. This does not scale.
-
 - Inconsistent agent context leads to incorrect API calls, which generates
   avoidable support load.
-
-- Competing API platforms (e.g., Stripe, Twilio) already ship AI-ready context
-  packages. Not having one puts Requiems API at a disadvantage in developer
-  experience.
-
-- The documentation infrastructure already exists in `api_docs/`. The marginal
-  cost of packaging it properly is low compared to the adoption benefit.
+- Competing API platforms (e.g., Stripe, Twilio) already ship AI-ready
+  context packages. Not having one puts Requiems API at a disadvantage in
+  developer experience.
+- The documentation infrastructure already exists in `api_docs/`. The
+  marginal cost of packaging it properly is low compared to the adoption
+  benefit.
 
 ## Approaches Considered
 
@@ -66,186 +69,293 @@ clean, minimal package.
 
 ### Option B — Static file download via CDN (discarded)
 
-Publish the skill files as static assets on a CDN (e.g., jsDelivr over GitHub
-raw). No packaging step needed. Downside: no versioning, no dependency
-management, no way to pin a specific version. If a file moves or is renamed, all
-users break silently.
+Publish the skill files as static assets on a CDN (e.g., jsDelivr over
+GitHub raw). No packaging step needed. Downside: no versioning, no
+dependency management, no way to pin a specific version. If a file moves or
+is renamed, all users break silently.
 
 ### Option C — Per-skill individual packages (deferred)
 
 Publish one npm package per endpoint (e.g., `@requiems/skill-sentiment`,
 `@requiems/skill-sudoku`). Maximally granular, but multiplies maintenance
-overhead significantly. Suitable as a future improvement once the single-package
-approach is proven.
+overhead significantly. Suitable as a future improvement once the
+single-package approach is proven — see
+[No granular versioning](#known-limitations-and-risks).
 
-### Option D — npm package with automated sync pipeline (chosen)
+### Option D — npm package with automated sync pipeline (chosen, implemented)
 
-Packages all skills into a single installable npm package. A GitHub Action keeps
-the content in sync with `requiems-api` weekly, and a second action publishes a
-new version when content changes. Users get standard dependency tooling
-(pinning, updating, changelogs) with zero ongoing manual effort. This is the
-approach implemented in this repository.
+Package all skills into a single installable npm package. A GitHub Action
+regenerates the content from `requiems-api` weekly and opens a PR; a
+maintainer reviews and merges; publishing to npm happens separately, gated
+behind an explicit release tag rather than firing automatically on merge.
+This is what's implemented today — see [Current Architecture](#current-architecture).
 
-## Proposed Solution
+## Current Architecture
 
-This repository provides a pipeline with two automated stages:
+The pipeline has three stages, and deliberately does **not** auto-publish on
+every merge — a human decides when a batch of regenerated skills becomes a
+public release:
 
-**Continuous Integration (weekly)** A GitHub Action fetches the latest
-documentation from `requiems-api`, transforms it into skill bundles, and commits
-the updated files to this repository.
+1. **Regenerate** (weekly, automated) — fetch the latest `api_docs/` YAML
+   from `requiems-api`, transform it into skill bundles, and open a PR
+   against this repo if anything changed.
+2. **Review & merge** (human) — a reviewer spot-checks the PR, which links
+   the live doc page for each API that changed.
+3. **Release** (human-triggered) — a maintainer pushes a `vX.Y.Z` tag once
+   they're ready to ship; that tag push, and only that, triggers `npm
+   publish`.
 
-**Continuous Deployment (on change)** When skill content changes, a second
-GitHub Action publishes a new package version to the npm registry. Users who
-depend on the package receive updates through their normal dependency workflow.
+Decoupling step 2 from step 3 is intentional: merging a regen PR only means
+"this reflects the current docs," not "this is now public on npm." A
+maintainer still has to explicitly cut a release. The tradeoff is an easy
+step to forget — see [Known Limitations](#known-limitations-and-risks).
 
-## Proposed Repository Structure
+## Repository Structure
 
 ```
 requiems-api-skills/
 ├── .github/
-│   └── workflows/
-│       ├── sync.yml          # CI: weekly fetch + transform from requiems-api
-│       └── publish.yml       # CD: publish to npm on content change
-├── skills/
-│   └── <category>/
-│       └── <endpoint-name>.md  # One skill file per endpoint
+│   ├── workflows/
+│   │   ├── regenerate-skills.yml  # weekly cron + manual: fetch, transform, open a PR
+│   │   └── publish.yml            # on tag push v*: verify version, npm publish
+│   ├── scripts/
+│   │   └── build-pr-body.sh       # builds the regen PR description
+│   └── CODEOWNERS
 ├── scripts/
-│   └── build.ts              # Transform raw API docs into skill format (Node.js)
+│   └── build/
+│       ├── index.ts               # transform pipeline (YAML -> SKILL.md)
+│       └── types.ts               # ApiDoc / Endpoint / Parameter shapes
+├── skills/
+│   └── <api_id>-<method>-<last-path-segment>/
+│       └── SKILL.md               # one generated skill per endpoint
+├── docs/
+│   ├── DESIGN.md                  # this file
+│   ├── DEVELOPERS.md              # local regen quick-start
+│   └── HOW_TO_BUILD_AGENT_SKILLS.md  # the generalized pattern, write-up form
+├── .nvmrc                         # pins the Node version for CI and local dev
 ├── package.json
+├── LICENSE
 └── README.md
 ```
 
+## Toolchain
+
+The transform script (`scripts/build/`) runs directly on **Node.js (≥26, see
+`.nvmrc`)** as plain TypeScript — no `ts-node`, no bundler, no build step.
+Node's native type-stripping erases the `interface`/`as` syntax at load time,
+so `node scripts/build/index.ts` just works. YAML parsing uses `js-yaml`
+(a `devDependency`, since it's build tooling, not part of the published
+package).
+
+This wasn't always the case: the script originally ran on Deno while
+everything else in the repo (`package.json`, publishing) was Node — two
+runtimes, two lockfiles, and a `denoland/setup-deno` step in CI just to run
+one file. The transform itself never needed anything Deno-specific (no
+untrusted input, no need for its permission sandboxing), so the split bought
+nothing but maintenance overhead. Consolidating onto Node removed a whole
+toolchain. See [HOW_TO_BUILD_AGENT_SKILLS.md](HOW_TO_BUILD_AGENT_SKILLS.md#keep-the-toolchain-boring)
+for the general version of this lesson.
+
 ## Skill Format
 
-Each skill file is a Markdown document with a structured front-matter header and
-a natural-language description of the endpoint:
+Each endpoint becomes its own directory under `skills/`, named
+`<api_id>-<method>-<last-path-segment>`, containing a single `SKILL.md`.
+Front-matter carries the machine-readable fields; the body is
+natural-language plus conditionally-rendered sections (Parameters, Request
+Example, Response Example, Response Fields, Errors — only emitted if the
+source YAML has that data). Real example, generated as-is from
+`api_docs/advice.yml`:
 
-```markdown
+````markdown
 ---
-name: sentiment-batch
-method: POST
-path: /v1/sentiment/batch
-description: Analyze sentiment for a batch of up to 50 text items.
+name: advice-get-advice
+api: Random Advice
+method: GET
+path: /v1/entertainment/advice
+base_url: https://api.requiems.xyz
+description: Returns a random piece of advice
 ---
 
-## Usage
+## Endpoint
 
-Send an array of strings. Returns a result object per item with `score`,
-`label`, and the original `text`. Results are returned in the same order as the
-input.
+**GET https://api.requiems.xyz/v1/entertainment/advice**
 
-## Parameters
+## Get Random Advice
 
-| Field | Type             | Required | Description |
-| ----- | ---------------- | -------- | ----------- |
-| items | array of strings | yes      | 1–50 items  |
+Returns a random piece of advice
 
-## Errors
+## Response Example
 
-- `400` — malformed JSON body
-- `422` — validation failed (empty array, >50 items, or empty string in array)
+```json
+{
+  "data": {
+    "id": 42,
+    "advice": "Don't compare yourself to others. Compare yourself to the person you were yesterday."
+  },
+  "metadata": {
+    "timestamp": "2026-01-01T00:00:00Z"
+  }
+}
 ```
+
+## Response Fields
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `id` | integer | Unique identifier for the advice |
+| `advice` | string | A random piece of advice |
+````
+
+One file per endpoint (not one per API) keeps each skill small enough for an
+agent to load on demand, and keeps regen PR diffs scoped to exactly the
+endpoints that changed.
 
 ## Automation Plan
 
-### sync.yml (CI)
+### regenerate-skills.yml
 
-Runs every Monday at 08:00 UTC.
+Triggers: weekly cron (`0 0 * * 1`, Monday 00:00 UTC) and manual
+`workflow_dispatch`.
 
-1. Checks out both `requiems-api` and this repository.
-2. Runs `scripts/build/index.ts` via Node.js to regenerate skill files.
-3. If any skill file changed, opens (or updates) a pull request with the diff.
-4. A maintainer reviews and merges; publish runs automatically on merge.
+1. Checks out both this repo and `requiems-api` (`persist-credentials:
+   false` on both — this job never needs to push with its own git identity).
+2. Installs Node from `.nvmrc`, runs `npm ci`.
+3. Runs `node scripts/build/index.ts --source
+   requiems-api/apps/dashboard/config/api_docs --output ./skills`.
+4. Checks `git status --porcelain -- skills/` to see if anything actually
+   changed. If not, the job ends here — no PR, no version bump.
+5. If something changed, bumps `package.json`'s patch version
+   (`npm version patch --no-git-tag-version`) so the eventual release tag
+   won't collide with an already-published version.
+6. Builds the PR body via `.github/scripts/build-pr-body.sh` — it pings
+   `@bobadilla-tech/requiems-api` and links the `requiems.xyz/en/apis/<api_id>`
+   doc page for each API that changed, so a reviewer can spot-check without
+   reading the raw YAML diff.
+7. Opens or updates a PR (`peter-evans/create-pull-request`) from
+   `chore/automated-skill-regeneration` into `main`.
 
-### publish.yml (CD)
+### publish.yml
 
-Triggers on push to `main` when files under `skills/` change.
+Trigger: push of a tag matching `v*` — **not** automatic on merge to `main`.
 
-1. Bumps the patch version in `package.json`.
-2. Runs `npm publish` using the `NPM_TOKEN` secret.
-3. Creates a GitHub Release with the changelog.
+1. Checkout (`persist-credentials: false`), setup Node from `.nvmrc` with
+   the npm registry configured.
+2. Verify the pushed tag's version matches `package.json`'s version
+   (stripping the `v` prefix); fail fast with a clear error if they
+   disagree, instead of finding out via a confusing registry error.
+3. `npm publish --access public`, authenticated via `NODE_AUTH_TOKEN`
+   (`secrets.NPM_TOKEN`).
 
-## POC Plan
+No GitHub Release object is created — that's a possible future addition, not
+implemented.
 
-Before building the full pipeline, a small proof of concept will validate the
-core assumption: that the existing `api_docs/` YAML files can be automatically
-transformed into skill bundles and packaged for local installation.
+## Known Limitations and Risks
+
+**Sync lag**: Skills are regenerated weekly. If an endpoint is added or
+changed mid-week, the package won't reflect it until the next cycle (or a
+manual `workflow_dispatch` trigger).
+
+**Format coupling**: The transform assumes the current shape of `api_docs/`
+YAML files. A schema change in `requiems-api` breaks the sync until
+`scripts/build/index.ts` is updated.
+
+**Manual release step is easy to forget**: Merging a regen PR only updates
+`main` — nothing gets published until a maintainer pushes a matching tag.
+If that step is skipped, the published package silently drifts behind what's
+actually in `main`.
+
+**Review ping isn't an enforced gate**: `@bobadilla-tech/requiems-api` is
+mentioned directly in the PR body text (not requested as a formal reviewer
+via the GitHub API), because the default `GITHUB_TOKEN` used by the workflow
+usually lacks the org-scope permission team review requests need. This
+notifies the team but doesn't block merging without an approval.
+
+**Version bump only tracks `skills/`**: The patch-bump gate diffs `skills/`
+specifically. A change to `scripts/build/index.ts` itself (e.g. an output
+format change) won't bump the version on its own — only a resulting change
+in generated output will.
+
+**CODEOWNERS / review team naming**: `.github/CODEOWNERS` lists
+`@bobadilla-tech/requiems-api-core-team`, while the automated regen PR pings
+`@bobadilla-tech/requiems-api` — two different team slugs. Worth confirming
+both teams exist, are visible to this repo, and are the intended
+reviewers for their respective purpose.
+
+**npm registry dependency**: Publishing depends on an org-level npm token.
+Token rotation or org changes require updating the `NPM_TOKEN` secret in
+this repository's settings.
+
+**Agent compatibility**: The `SKILL.md` convention is broad enough to work
+with Claude Code, OpenCode, and GitHub Copilot (see the README for
+per-agent install steps), but each still expects the file in a different
+directory. There's no per-agent adapter beyond documenting those paths.
+
+**No granular versioning**: All skills ship as a single package. If only one
+endpoint changes, users re-download everything. A per-skill package
+approach (Option C, above) is a possible future improvement.
+
+## Appendix: Original POC Plan
+
+This is the original proof-of-concept plan the automation pipeline above was
+built from. Kept for the record — every step below was completed and the
+success criteria were met before the CI automation was added.
+
+Before building the full pipeline, a small proof of concept validated the
+core assumption: that the existing `api_docs/` YAML files could be
+automatically transformed into skill bundles and packaged for local
+installation.
 
 ### Scope
 
-The POC covers only the transformation and local packaging step. It does not
-include GitHub Actions, npm publishing, or CI/CD. The goal is to answer one
+The POC covered only the transformation and local packaging step — no
+GitHub Actions, no npm publishing, no CI/CD. The goal was to answer one
 question: _does the data we have today produce a usable skill package?_
 
 ### Steps
 
-**Step 1 — Pick two or three representative endpoints** Choose endpoints with
-different characteristics from `api_docs/` — one with simple parameters and a
-flat response (e.g., `sudoku`), one with a richer nested response structure
-(e.g., `exercises`), and one with an external API dependency (e.g.,
-`spellcheck`, which calls the LanguageTool API). This tests that the transformer
-handles different levels of complexity, not just the happy path.
+**Step 1 — Pick two or three representative endpoints.** Endpoints with
+different characteristics from `api_docs/` — simple parameters and a flat
+response (e.g., `sudoku`), a richer nested response structure (e.g.,
+`exercises`), and an external API dependency (e.g., `spellcheck`, which
+calls the LanguageTool API). This tested that the transformer handles
+different levels of complexity, not just the happy path.
 
-**Step 2 — Write `scripts/build/index.ts`** A minimal Node.js TypeScript script (run
-directly via `node`, using Node's native TypeScript type-stripping — no build
-step) that:
+**Step 2 — Write the transform script.** A minimal script that:
 
 - Reads a `.yml` file from `api_docs/`
 - Extracts the relevant fields (name, method, path, description, parameters,
   errors, examples)
-- Writes a `.md` file in the skill format defined in this document
+- Writes a `.md` file in the skill format defined above
 
 No GitHub Actions, no automation. Just:
 `node scripts/build/index.ts --source ./sample-docs --output ./skills`
 
-**Step 3 — Set up `package.json`** Minimal `package.json` that includes only the
-`skills/` directory in the published files. Verify locally with `npm pack` —
-this generates a `.tgz` file that shows exactly what a user would download.
+**Step 3 — Set up `package.json`.** Minimal `package.json` including only
+the `skills/` directory in the published files. Verified locally with `npm
+pack` — this generates a `.tgz` file showing exactly what a user would
+download.
 
-**Step 4 — Install locally and verify**
+**Step 4 — Install locally and verify.**
 
 ```bash
 npm pack
 npm install ./requiems-api-skills-0.0.1.tgz
 ```
 
-Open the installed files and confirm a real agent tool (Claude Code) can load
-and use at least one skill correctly.
+Opened the installed files and confirmed a real agent tool (Claude Code)
+could load and use a skill correctly.
 
-### Success criteria
+### Success criteria (all met)
 
-- `build.ts` runs without errors on the three selected endpoints
-- The generated `.md` files are valid skill format (correct front-matter,
-  readable body)
-- `npm pack` produces a `.tgz` with only the `skills/` folder inside
-- At least one generated skill can be loaded by Claude Code without manual
-  editing
+- The transform ran without errors on the three selected endpoints.
+- The generated `.md` files matched valid skill format (correct
+  front-matter, readable body).
+- `npm pack` produced a `.tgz` with only the `skills/` folder inside.
+- At least one generated skill loaded in Claude Code without manual editing.
 
-### Out of scope for POC
+### Out of scope for the POC (addressed later, above)
 
-- Automated sync with `requiems-api` (that is Step 3 of the full plan)
-- Publishing to the npm registry (requires org credentials)
-- Handling all edge cases in `api_docs/` structure
+- Automated sync with `requiems-api`
+- Publishing to the npm registry
+- Handling every edge case in `api_docs/` structure
 - Tests
-
-## Known Limitations and Risks
-
-**Sync lag**: Skills are regenerated weekly. If an endpoint is added or changed
-mid-week, the package will not reflect it until the next sync cycle (or a manual
-trigger).
-
-**Format coupling**: The build script assumes the current structure of
-`api_docs/` YAML files. Changes to that schema in `requiems-api` will break the
-sync until `scripts/build/index.ts` is updated.
-
-**npm registry dependency**: Publishing depends on an org-level npm token. Token
-rotation or org changes require updating the `NPM_TOKEN` secret in this
-repository's settings.
-
-**Agent compatibility**: Skill format is optimized for Claude Code. Other agents
-(Cursor, Copilot, etc.) may require additional adapters or a different directory
-layout.
-
-**No granular versioning**: Today, all skills are published as a single package.
-If only one endpoint changes, users re-download everything. A per-skill package
-approach is a future improvement.
