@@ -16,7 +16,8 @@
     "js-yaml": "^4.1.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "keywords": [
     "requiems",
@@ -28,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bobadilla-tech/requiems-api-skills.git"
+    "url": "git+https://github.com/bobadilla-tech/requiems-api-skills.git"
   },
   "homepage": "https://requiems.xyz/en/skills",
   "dependencies": {
