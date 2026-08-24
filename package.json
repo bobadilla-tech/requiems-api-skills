@@ -1,6 +1,6 @@
 {
   "name": "@requiems/api-skills",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Installable skill packages for Requiems API, enabling AI agents to interact with its endpoints natively.",
   "type": "module",
   "engines": {
